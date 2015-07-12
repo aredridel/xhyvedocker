@@ -69,7 +69,7 @@ elif [ "$1" = "keys" ]; then
 
 else
 
-    echo "Use: $0 [init start | console | keys | deps]" 1>&2
+    echo "Use: $0 [init | start | console | keys | deps]" 1>&2
     exit 1
 
 fi
