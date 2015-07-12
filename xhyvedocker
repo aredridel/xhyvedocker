@@ -1,0 +1,75 @@
+#!/bin/bash
+
+set -e
+
+trap error ERR
+
+function error {
+    echo $@
+    exit 1
+}
+
+PATH="$PATH:/usr/local/opt/e2fsprogs/bin:/usr/local/opt/e2fsprogs/sbin"
+
+if [ "$1" = "init" ]; then
+
+    if [ ! -f $HOME/.boot2docker/boot2docker.iso ]; then
+        curl -L -o $HOME/.boot2docker/boot2docker.iso https://github.com/boot2docker/boot2docker/releases/download/v1.7.0/boot2docker.iso
+    fi
+
+    if [ ! -f $HOME/.boot2docker/uuid ]; then
+        uuidgen > $HOME/.boot2docker/uuid
+    fi
+
+    if [ ! -f $HOME/.boot2docker/hdd.img ]; then
+        dd if=/dev/zero of=$HOME/.boot2docker/hdd.img bs=1m count=1024
+        mkfs.ext4 $HOME/.boot2docker/hdd.img
+        tune2fs -L boot2docker-data $HOME/.boot2docker/hdd.img
+    fi
+
+    if [ ! -f $HOME/.boot2docker/vmlinuz64 ]; then
+        isoinfo -J -x /boot/vmlinuz64 -i ~/.boot2docker/boot2docker.iso > $HOME/.boot2docker/vmlinuz64
+    fi
+
+    if [ ! -f $HOME/.boot2docker/initrd.img ]; then
+        isoinfo -J -x /boot/initrd.img -i ~/.boot2docker/boot2docker.iso > $HOME/.boot2docker/initrd.img
+    fi
+
+elif [ "$1" = "start" ]; then
+
+    dtach -c $HOME/.boot2docker.console -z sudo -n xhyve -m 1G -c 2 -s 2:0,virtio-net -s 4,virtio-blk,$HOME/.boot2docker/hdd.img -s 0:0,hostbridge -s 31,lpc -l com1,stdio -f kexec,$HOME/.boot2docker/vmlinuz64,$HOME/.boot2docker/initrd.img,console=ttyS0,57600n81 -U `cat $HOME/.boot2docker/uuid`
+
+elif [ "$1" = "console" ]; then
+
+    dtach -a $HOME/.boot2docker.console
+
+elif [ "$1" = "deps" ]; then
+
+    brew install e2fsprogs dtach xhyve cdrtools
+
+elif [ "$1" = "keys" ]; then
+
+    # extract keys from hard drive image
+
+    if [ ! -d $HOME/.docker ]; then
+        mkdir -p $HOME/.docker
+    fi
+
+    if [ ! -f $HOME/.docker/ca.pem ]; then
+        debugfs -R 'cat /var/lib/boot2docker/tls/ca.pem' $HOME/.boot2docker/hdd.img > ~/.docker/ca.pem
+    fi
+
+    if [ ! -f $HOME/.docker/key.pem ]; then
+        debugfs -R 'cat /var/lib/boot2docker/tls/key.pem' $HOME/.boot2docker/hdd.img > ~/.docker/key.pem
+    fi
+
+    if [ ! -f $HOME/.docker/cert.pem ]; then
+        debugfs -R 'cat /var/lib/boot2docker/tls/cert.pem' $HOME/.boot2docker/hdd.img > ~/.docker/cert.pem
+    fi
+
+else
+
+    echo "Use: $0 [init start | console | keys | deps]" 1>&2
+    exit 1
+
+fi
