@@ -2,13 +2,6 @@
 
 set -e
 
-trap error ERR
-
-function error {
-    echo $@
-    exit 1
-}
-
 PATH="$PATH:/usr/local/opt/e2fsprogs/bin:/usr/local/opt/e2fsprogs/sbin"
 
 if [ "$1" = "init" ]; then
