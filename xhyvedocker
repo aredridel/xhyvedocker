@@ -6,6 +6,11 @@ PATH="$PATH:/usr/local/opt/e2fsprogs/bin:/usr/local/opt/e2fsprogs/sbin"
 
 if [ "$1" = "init" ]; then
 
+    # create the $HOME/.boot2docker folder if it doesn't already exist
+    if [ ! -d $HOME/.boot2docker ]; then
+        mkdir $HOME/.boot2docker
+    fi
+
     if [ ! -f $HOME/.boot2docker/boot2docker.iso ]; then
         curl -L -o $HOME/.boot2docker/boot2docker.iso https://github.com/boot2docker/boot2docker/releases/download/v1.7.0/boot2docker.iso
     fi
@@ -62,7 +67,7 @@ elif [ "$1" = "keys" ]; then
 
 else
 
-    echo "Use: $0 [init start | console | keys | deps]" 1>&2
+    echo "Use: $0 [init | start | console | keys | deps]" 1>&2
     exit 1
 
 fi
