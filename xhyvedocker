@@ -34,6 +34,10 @@ if [ "$1" = "init" ]; then
     fi
 
 elif [ "$1" = "start" ]; then
+    if [ -e $HOME/.boot2docker.console ]; then
+      echo "ERROR: An instance of boot2docker is already running"
+      exit 1
+    fi
 
     dtach -c $HOME/.boot2docker.console -z sudo -n xhyve -m 1G -c 2 -s 2:0,virtio-net -s 4,virtio-blk,$HOME/.boot2docker/hdd.img -s 0:0,hostbridge -s 31,lpc -l com1,stdio -f kexec,$HOME/.boot2docker/vmlinuz64,$HOME/.boot2docker/initrd.img,console=ttyS0,57600n81 -U `cat $HOME/.boot2docker/uuid`
 
