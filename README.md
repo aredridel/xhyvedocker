@@ -13,7 +13,7 @@ Use
 Install the dependencies with homebrew:
 
 ```bash
-xyvedocker deps
+xhyvedocker deps
 ```
 
 Initialize and start.
