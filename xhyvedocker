@@ -43,6 +43,17 @@ elif [ "$1" = "start" ]; then
     sudo -v
 
     dtach -n $HOME/.boot2docker.console -z sudo xhyve -m 1G -c 2 -s 2:0,virtio-net -s 4,virtio-blk,$HOME/.boot2docker/hdd.img -s 0:0,hostbridge -s 31,lpc -l com1,stdio -f kexec,$HOME/.boot2docker/vmlinuz64,$HOME/.boot2docker/initrd.img,console=ttyS0,57600n81 -U `cat $HOME/.boot2docker/uuid`
+elif [ "$1" = "status" ]; then
+  # boot2docker instance uuid
+  uuid=$(cat $HOME/.boot2docker/uuid)
+  # pid for the running xhyve instance
+  pid=$(pgrep -x -f "(xhyve).+(\-U\ $uuid)")
+
+  if [ $? = 1 ]; then
+    echo "boot2docker is not running"
+  elif [ $pid -gt 0 ]; then
+    echo "boot2docker is running on pid $pid"
+  fi
 
 elif [ "$1" = "console" ]; then
 
@@ -74,7 +85,7 @@ elif [ "$1" = "keys" ]; then
 
 else
 
-    echo "Use: $0 [init | start | console | keys | deps]" 1>&2
+    echo "Use: $0 [init | start | status | console | keys | deps]" 1>&2
     exit 1
 
 fi
